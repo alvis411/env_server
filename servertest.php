@@ -1,6 +1,6 @@
 <?php
 header('Access-Control-Allow-Origin: *');
-require_once ("nuSOAP/lib/nusoap.php");
+require_once ("nusoap/lib/nusoap.php");
 
 //App config
 define("SERVER","pcnguyen.dyndns.org");
@@ -26,7 +26,7 @@ function closeDB(){
 
 //server test
 $server=new soap_server();
-$server->configureWSDL('Calculator',serverURL);
+$server->configureWSDL('English Video Service',serverURL);
 
 ///////////////////////////////
 // Register function to soap server:
@@ -42,7 +42,7 @@ $server->register('set_password', array('id'=>'xsd:string', 'username'=>'xsd:str
 
 //register service for video table
 $server->register('set_video', array('owner'=>'xsd:string','content'=>'xsd:string','url'=>'xsd:string','name'=>'xsd:string'),array('name'=>'xsd:string','id'=>'xsd:string'), serverURL);
-$server->register('get_video', array('id'=>'xsd:string'),array('owner'=>'xsd:string','content'=>'xsd:string','url'=>'xsd:string','name'=>'xsd:string'), serverURL);
+$server->register('getVideo', array('id'=>'xsd:string'),array('owner'=>'xsd:string','content'=>'xsd:string','url'=>'xsd:string','name'=>'xsd:string'), serverURL);
 $server->register('get_video_by_owner', array('owner'=>'xsd:string'),array('video_id'=>'xsd:string'), serverURL);
 $server->register('get_video_by_name', array('name'=>'xsd:string'),array('video_id'=>'xsd:string'), serverURL);
 $server->register('get_video_content', array('id'=>'xsd:string'),array('content'=>'xsd:string'), serverURL);
@@ -58,18 +58,22 @@ $server->register('set_question_time', array('id'=>'xsd:string','time'=>'xsd:str
 
 //khai bao return cho cac function vua dang ky
 // luon co connectDB(); va closeDB(); neu dung database
-function set_user($username, $site, $role){
-	connectDB();
-	$x="INSERT INTO env_user( username, site, role ) VALUES ('"&$username&"',  '"&$site&"',  '"$role"')";
-   	if(mysql_query($x)){
-		$outcome = "OK";
-	}
-	else {
-		$outcome = "error:" & mysql_error();
-	}
-	return json_encode($outcome);
-	closeDB();
-}
 
+//////////////
+//function: getVideo
+//input: videoID
+//return: a json object contain id,owner,content,url,name of video
+//////////////
+function getVideo($videoID){
+	connectDB();
+	$query="select * from env_video where id='".$videoID."'";
+	$execute=mysql_query($query) or die(mysql_error());
+    while($data=mysql_fetch_row($execute))
+    {
+	   $videoObject=array('id'=>$data[0],'owner'=>$data[1],'content'=>$data[2],'url'=>$data[3],'name'=>$data[4]);
+    }
+	return json_encode($videoObject);
+	closeDB();	
+}
 $server->service($HTTP_RAW_POST_DATA);
 ?>
